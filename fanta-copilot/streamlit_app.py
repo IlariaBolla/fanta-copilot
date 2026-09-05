@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hmac
 import json
 import os
 from pathlib import Path
@@ -62,6 +63,40 @@ def automatic_refresh_if_needed():
 def get_store() -> AuctionStore:
     custom = os.environ.get("FANTA_DB_PATH")
     return AuctionStore(Path(custom) if custom else DB_FILE)
+
+
+def configured_pin() -> str:
+    """Read the access PIN without ever keeping it in the public source code."""
+    try:
+        secret_pin = st.secrets["APP_PIN"]
+    except (FileNotFoundError, KeyError):
+        secret_pin = os.environ.get("FANTA_APP_PIN", "")
+    return str(secret_pin).strip()
+
+
+def require_access():
+    """Stop the app before loading auction data until this session is unlocked."""
+    if st.session_state.get("access_granted", False):
+        return
+
+    expected_pin = configured_pin()
+    st.title("⚽ Fanta Auction Copilot")
+    st.subheader("Accesso all'asta")
+    st.write("Inserisci il PIN condiviso dall'organizzatore per aprire l'assistente.")
+
+    if not expected_pin:
+        st.error("PIN non configurato. Il proprietario deve aggiungere APP_PIN nei Secrets di Streamlit.")
+        st.stop()
+
+    with st.form("access_form"):
+        entered_pin = st.text_input("PIN", type="password", autocomplete="off", key="access_pin")
+        submitted = st.form_submit_button("ENTRA", type="primary", width="stretch")
+    if submitted:
+        if hmac.compare_digest(entered_pin, expected_pin):
+            st.session_state["access_granted"] = True
+            st.rerun()
+        st.error("PIN non corretto. Riprova.")
+    st.stop()
 
 
 def setup_screen(store: AuctionStore):
@@ -403,6 +438,7 @@ def league_settings(store: AuctionStore, config: dict):
 
 
 def main():
+    require_access()
     store = get_store()
     if not store.is_configured():
         setup_screen(store)

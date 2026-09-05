@@ -3,11 +3,11 @@
 1. Push this repository to GitHub.
 2. Open [Streamlit Community Cloud](https://share.streamlit.io/).
 3. Create an app from this repository.
-4. Set the entrypoint to `streamlit_app.py`.
-5. Choose the app privacy setting and invite your friend's email if needed.
-6. Send your friend the Streamlit link.
+4. Set the entrypoint to `fanta-copilot/streamlit_app.py`.
+5. In Advanced settings, add `APP_PIN = "your-private-pin"` to Streamlit Secrets.
+6. Send your friend the Streamlit link and the PIN through a private channel.
 
-No API key, secret, database, upload, or terminal is required by the final user.
+No API key, database, upload, or terminal is required by the final user. The owner configures one access PIN in Streamlit Secrets.
 
 # Fanta Auction Copilot 2026/27
 
